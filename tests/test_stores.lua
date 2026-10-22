@@ -18,19 +18,49 @@ WoW.now = 1085
 landNow()
 eq(a.routes["901>902"].base, 85, "learned into the first")
 eq(b.routes["901>902"].base, 85, "...and the second")
-eq(b.routes["901>902"].at, 600000, "...stamped")
+eq(b.routes["901>902"].baseAt, 600000, "...stamped")
 
 -- Reading takes the newest entry across the stores.
-a.routes["901>902"] = { base = 70, at = 700000 }
-b.routes["901>902"] = { base = 99, at = 650000 }
+a.routes["901>902"] = { base = 70, baseAt = 700000 }
+b.routes["901>902"] = { base = 99, baseAt = 650000 }
 takeOff(2)
 eq(lib:Current().total, 70, "the newest entry wins")
 landNow()
 a.routes["901>902"] = { base = 70 }   -- no stamp (written before stamps): oldest
-b.routes["901>902"] = { base = 99, at = 1 }
+b.routes["901>902"] = { base = 99, baseAt = 1 }
 takeOff(2)
 eq(lib:Current().total, 99, "a stamped entry beats an unstamped one")
 landNow()
+-- Stamps are per kind (Codex on #2): A's newer Frequent Flier landing doesn't
+-- make its older base time win over B's newer one.
+a.routes["901>902"] = { base = 70, baseAt = 100, fast = 60, fastAt = 200 }
+b.routes["901>902"] = { base = 80, baseAt = 150 }
+takeOff(2)
+eq(lib:Current().total, 80, "the newest base time, whatever the fast one's stamp")
+landNow()
+-- ...and the mirror: a newer base landing doesn't make an older fast time win.
+a.routes["901>902"] = { base = 70, baseAt = 300, fast = 60, fastAt = 100 }
+b.routes["901>902"] = { fast = 50, fastAt = 200 }
+WoW.frequentFlier = 1
+takeOff(2)
+eq(lib:Current().total, 50, "the newest fast time, whatever the base one's stamp")
+landNow()
+WoW.frequentFlier = 0
+a.routes["901>902"] = { base = 70, at = 300 }   -- a lone `at` (written by an early copy) counts for both
+b.routes["901>902"] = { base = 80, baseAt = 150 }
+takeOff(2)
+eq(lib:Current().total, 70, "a lone at stamps the base time too")
+landNow()
+-- A Frequent Flier landing stamps only its own kind.
+WoW.frequentFlier = 1
+WoW.now, WoW.serverTime = 1500, 900000
+takeOff(2)
+WoW.now = 1560
+landNow()
+eq(a.routes["901>902"].fastAt, 900000, "a fast landing stamps fastAt")
+eq(a.routes["901>902"].baseAt, nil, "...and leaves the base stamp alone")
+eq(b.routes["901>902"].baseAt, 150, "...in every store")
+WoW.frequentFlier = 0
 eq(lib:LearnedCount(), 1, "a path in both stores counts once")
 
 -- A store added mid-flight gets the flight saved too.
@@ -62,15 +92,24 @@ WoW.now = 110
 landNow()
 eq(a2.routes["901>902"].base, 90, "a resumed flight teaches nothing")
 
--- A host loaded after the world (load on demand) resumes on adding its store.
+-- A host loaded on demand, after the world (Codex on #2): its store is the
+-- first, the library's frame never heard PLAYER_ENTERING_WORLD, and the
+-- flight in the air resumes at once.
 lib = newSession()
-WoW.fire("PLAYER_ENTERING_WORLD")   -- no store yet: no frame, nothing heard
+WoW.loggedIn = true
 WoW.taxi.onTaxi = true
 local late = { current = { route = { keys = { 901, 902 }, names = { "Alpha", "Beta" } }, at = WoW.serverTime - 10 } }
 lib:AddStore(late)
-eq(lib:Current(), nil, "nothing before the library heard the world")
+cur = lib:Current()
+check(cur and cur.to == "Beta" and cur.resumed, "logged in already: the save resumes on adding the store")
+landNow()
+-- Before login (a store added at ADDON_LOADED, the usual case) nothing resumes until the world.
+lib = newSession()
+WoW.taxi.onTaxi = true
+lib:AddStore({ current = { route = { keys = { 901, 902 }, names = { "Alpha", "Beta" } }, at = WoW.serverTime } })
+eq(lib:Current(), nil, "before login: nothing yet")
 WoW.fire("PLAYER_ENTERING_WORLD")
-check(lib:Current() and lib:Current().to == "Beta", "then the save resumes")
+check(lib:Current() ~= nil, "then the world resumes it")
 landNow()
 
 -- A stale save, a corrupt one, or off the taxi: no resume.

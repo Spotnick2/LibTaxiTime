@@ -34,7 +34,7 @@ GlassPanel #124 / PR #125, where the timing was built and reviewed (Codex).
 Colon-called (a dot call errors): `lib:AddStore(tbl)`, `lib:Current()`, `lib:Last()`,
 `lib:LearnedCount()`, `lib:Forget()`; EventRegistry `"LibTaxiTime.Changed"` `()`. Shapes and
 meanings are in `LibTaxiTime.lua`'s header. Store keys the library owns: `routes`
-(`[path] = { base, fast, at }`) and `current` (`{ route = { keys, names }, at, early }`).
+(`[path] = { base, fast, baseAt, fastAt }`, a stamp per kind; a lone `at` from an early copy counts for both) and `current` (`{ route = { keys, names }, at, early }`). `AddStore` after login (`IsLoggedIn()`: a host loaded on demand) resumes a flight in the air at once.
 **Within MAJOR 1 the API only grows**: never remove, rename or change the meaning of a function,
 field, key, event or source name (`"learned"`, `"route"`, `"estimate"`). GlassPanel's own
 `GlassPanel.Flight` (API 1) passes this shape through to GUF.

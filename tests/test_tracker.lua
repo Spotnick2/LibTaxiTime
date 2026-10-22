@@ -44,7 +44,7 @@ WoW.now = 1090.04
 landNow()
 eq(lib:Current(), nil, "landed")
 eq(store.routes["901>902"].base, 90, "learned, to a tenth")
-eq(store.routes["901>902"].at, 500000, "...stamped with server time")
+eq(store.routes["901>902"].baseAt, 500000, "...stamped with server time, for its kind")
 eq(store.current, nil, "nothing to resume")
 eq(WoW.changes(), 2, "the landing is said")
 local last = lib:Last()

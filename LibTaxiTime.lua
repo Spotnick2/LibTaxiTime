@@ -34,14 +34,17 @@
 --
 -- Stores: an embedded library has no SavedVariables of its own, so each host
 -- hands over a table of its own (lib:AddStore), and the library owns two keys
--- in it: `routes` and `current`. A landing is written to every store; a
--- lookup takes the newest entry (`at`, server time) across them, so removing
--- either addon loses nothing. Nothing starts (no frame, hook or event) until
+-- in it: `routes` (`[path] = { base, fast, baseAt, fastAt }`, the At stamps
+-- in server time; an entry's lone `at` counts for both kinds) and `current`. A
+-- landing is written to every store; a lookup takes the newest time of the
+-- kind asked across them, so removing either addon loses nothing. Nothing starts (no frame, hook or event) until
 -- the first store is added.
 --
 -- API (MINOR 1), colon-called:
 --   lib:AddStore(tbl) -> true, or false and why. From the host's ADDON_LOADED
 --     (its SavedVariables are loaded then); the same table twice is ignored.
+--     Added after login (a host loaded on demand), it resumes a flight in the
+--     air at once.
 --   lib:Current() -> nil off a flight, else a fresh table:
 --     { to, from, stops, start, total, source, early, resumed }
 --     to/from: node names (nil for an unknown route); stops: every node name
@@ -100,6 +103,13 @@ function impl.Guard(fn, ...)
 end
 
 function impl.OnTaxi() return P(UnitOnTaxi("player")) == true end
+
+-- Logged in already: a host loaded on demand adds its store after
+-- PLAYER_ENTERING_WORLD, which the library's frame (made then) never hears.
+function impl.LoggedIn()
+    local f = rawget(_G, "IsLoggedIn")
+    return type(f) == "function" and P(f()) == true
+end
 
 function impl.Changed()
     local R = rawget(_G, "EventRegistry")
@@ -202,7 +212,7 @@ function impl.Stored(path, kind)
         local e = lib.impl.Routes(store)[path]
         local t = type(e) == "table" and finite(e[kind])
         if t and t >= lib.MIN_FLIGHT and t <= lib.MAX_FLIGHT then
-            local at = finite(e.at) or 0
+            local at = finite(e[kind .. "At"]) or finite(e.at) or 0
             if not bestAt or at > bestAt then best, bestAt = t, at end
         end
     end
@@ -265,7 +275,7 @@ function impl.Learn(fl, took)
         local all = lib.impl.Routes(store)
         local entry = type(all[path]) == "table" and all[path] or {}
         entry[kindOf(fl.fast)] = math.floor(took * 10 + 0.5) / 10
-        entry.at = at
+        entry[kindOf(fl.fast) .. "At"] = at   -- per kind: a Frequent Flier landing doesn't freshen a base time
         all[path] = entry
     end
 end
@@ -454,7 +464,8 @@ function lib:AddStore(tbl)
     local fl = lib.state.flight
     if fl then
         lib.impl.SaveCurrent()   -- a store added mid-flight keeps it too
-    elseif lib.state.inWorld then
+    elseif lib.state.inWorld or lib.impl.LoggedIn() then
+        lib.state.inWorld = true
         lib.impl.Resume()        -- a host loaded after the world: it may be on a taxi already
     end
     return true
