@@ -1,0 +1,27 @@
+# LibTaxiTime-1.0 is never published on its own (it has no TOC, so the packager
+# would stop). Addons embed it through their .pkgmeta externals.
+#
+# CurseForge's packager does NOT apply this ignore list when it copies the
+# library into <addon>/Libs/LibTaxiTime-1.0 (measured in Priestly's published zip,
+# Priestly #53): every consumer repeats the non-dot entries below under
+# Libs/LibTaxiTime-1.0/ in its own .pkgmeta. The pilot consumer's CI
+# (GlassPanel) asserts what its zip holds.
+#
+# LICENSE deliberately ships: MIT requires the notice to travel with the code.
+
+package-as: LibTaxiTime-1.0
+
+enable-nolib-creation: no
+
+ignore:
+  - tests
+  - docs
+  - Tools
+  - .github
+  - .claude
+  - .gitignore
+  - .gitattributes
+  - .pkgmeta
+  - AGENTS.md
+  - CLAUDE.md
+  - README.md
