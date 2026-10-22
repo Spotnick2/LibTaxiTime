@@ -1,0 +1,21 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <!--
+        Embedded into a consuming addon through .pkgmeta externals, at the
+        main addon's Libs/ (never inside a folder that move-folders moves):
+
+            externals:
+              Libs/LibTaxiTime-1.0:
+                url: https://github.com/Spotnick2/LibTaxiTime
+                tag: r1
+
+        and loaded from that addon's TOC before any of its own files:
+
+            Libs\LibTaxiTime-1.0\LibTaxiTime-1.0.xml
+
+        LibStub is bundled: it resolves to a single instance at runtime.
+        Only files that exist: tests/harness.lua loads exactly this list.
+    -->
+    <Script file="LibStub\LibStub.lua"/>
+    <Script file="LibTaxiTime.lua"/>
+    <Script file="Routes.lua"/>
+</Ui>
