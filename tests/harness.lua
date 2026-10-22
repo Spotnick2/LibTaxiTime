@@ -68,7 +68,7 @@ function WoW.reset()
     WoW.now, WoW.serverTime = 1000, 500000
     WoW.taxi = { onTaxi = false, mapID = 1414, nodes = {}, routes = {}, taken = {}, early = 0 }
     WoW.frequentFlier = 0
-    WoW.loggedIn = false
+    WoW.inWorld = false   -- IsPlayerInWorld(): false until PLAYER_ENTERING_WORLD
     WoW.timers, WoW.tickers = {}, {}
     WoW.callbacks, WoW.triggered = {}, {}
     frames = {}
@@ -79,7 +79,7 @@ end
 function issecretvalue(v) return secrets[v] ~= nil end
 strmatch = string.match
 function GetTime() return WoW.now end
-function IsLoggedIn() return WoW.loggedIn end
+function IsPlayerInWorld() return WoW.inWorld end
 function GetServerTime() return WoW.serverTime end
 function UnitOnTaxi(unit)
     if unit ~= "player" then return false end

@@ -43,8 +43,8 @@
 -- API (MINOR 1), colon-called:
 --   lib:AddStore(tbl) -> true, or false and why. From the host's ADDON_LOADED
 --     (its SavedVariables are loaded then); the same table twice is ignored.
---     Added after login (a host loaded on demand), it resumes a flight in the
---     air at once.
+--     Added once the player is in the world (a host loaded on demand), it
+--     resumes a flight in the air at once; before that, at world entry.
 --   lib:Current() -> nil off a flight, else a fresh table:
 --     { to, from, stops, start, total, source, early, resumed }
 --     to/from: node names (nil for an unknown route); stops: every node name
@@ -104,10 +104,14 @@ end
 
 function impl.OnTaxi() return P(UnitOnTaxi("player")) == true end
 
--- Logged in already: a host loaded on demand adds its store after
+-- In the world already: a host loaded on demand adds its store after
 -- PLAYER_ENTERING_WORLD, which the library's frame (made then) never hears.
-function impl.LoggedIn()
-    local f = rawget(_G, "IsLoggedIn")
+-- IsPlayerInWorld, not IsLoggedIn: that one is true from PLAYER_LOGIN, before
+-- the taxi state is ready, and a resume then would read "not on a taxi" and
+-- drop the saved flight (Codex on #2; Blizzard's load-on-demand SpellBook
+-- checks IsPlayerInWorld the same way).
+function impl.InWorld()
+    local f = rawget(_G, "IsPlayerInWorld")
     return type(f) == "function" and P(f()) == true
 end
 
@@ -464,7 +468,7 @@ function lib:AddStore(tbl)
     local fl = lib.state.flight
     if fl then
         lib.impl.SaveCurrent()   -- a store added mid-flight keeps it too
-    elseif lib.state.inWorld or lib.impl.LoggedIn() then
+    elseif lib.state.inWorld or lib.impl.InWorld() then
         lib.state.inWorld = true
         lib.impl.Resume()        -- a host loaded after the world: it may be on a taxi already
     end

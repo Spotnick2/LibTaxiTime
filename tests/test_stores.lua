@@ -96,12 +96,27 @@ eq(a2.routes["901>902"].base, 90, "a resumed flight teaches nothing")
 -- first, the library's frame never heard PLAYER_ENTERING_WORLD, and the
 -- flight in the air resumes at once.
 lib = newSession()
-WoW.loggedIn = true
+WoW.inWorld = true
 WoW.taxi.onTaxi = true
 local late = { current = { route = { keys = { 901, 902 }, names = { "Alpha", "Beta" } }, at = WoW.serverTime - 10 } }
 lib:AddStore(late)
 cur = lib:Current()
-check(cur and cur.to == "Beta" and cur.resumed, "logged in already: the save resumes on adding the store")
+check(cur and cur.to == "Beta" and cur.resumed, "in the world already: the save resumes on adding the store")
+landNow()
+-- Loaded on demand after PLAYER_LOGIN but before the world (a /reload mid-flight,
+-- Codex's follow-up on #2): the taxi state isn't ready (reads off the taxi), so
+-- nothing resumes yet and the saved flight is kept for the world entry.
+lib = newSession()
+WoW.inWorld = false   -- logged in, not in the world yet
+WoW.taxi.onTaxi = false
+local early = { current = { route = { keys = { 901, 902 }, names = { "Alpha", "Beta" } }, at = WoW.serverTime - 10 } }
+lib:AddStore(early)
+eq(lib:Current(), nil, "before the world: nothing resumes")
+check(type(early.current) == "table", "...and the saved flight is kept")
+WoW.inWorld, WoW.taxi.onTaxi = true, true
+WoW.fire("PLAYER_ENTERING_WORLD")
+cur = lib:Current()
+check(cur and cur.to == "Beta" and cur.resumed, "at world entry it resumes, route and all")
 landNow()
 -- Before login (a store added at ADDON_LOADED, the usual case) nothing resumes until the world.
 lib = newSession()
