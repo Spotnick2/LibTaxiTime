@@ -9,12 +9,12 @@
 
     Consumers call it from their own deploy:
         pwsh ..\LibTaxiTime\Tools\deploy.ps1 -Addon GlassPanel
-        pwsh ..\LibTaxiTime\Tools\deploy.ps1 -Addon GlassUnitFrames -AddOnsPath "D:\...\_classic_beta_\Interface\AddOns"
+        pwsh ..\LibTaxiTime\Tools\deploy.ps1 -Addon GlassUnitFrames -AddOnsPath "D:\...\_forever_\Interface\AddOns"
 #>
 
 param(
     [Parameter(Mandatory)][string]$Addon,
-    [string]$AddOnsPath = "C:\Program Files (x86)\World of Warcraft\_classic_beta_\Interface\AddOns",
+    [string]$AddOnsPath = "C:\Program Files (x86)\World of Warcraft\_forever_\Interface\AddOns",
     [string]$Lua = "C:\Program Files (x86)\Lua\5.1\lua.exe"
 )
 
