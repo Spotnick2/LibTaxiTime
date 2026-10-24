@@ -86,3 +86,27 @@ Issue → branch → PR → review (`/codex-consult`, launched by the owner) →
 Never commit to `main`. **Raise MINOR for every behaviour change, in the same PR**, and tag the
 merge commit `rN` (`rN` == MINOR); never move or reuse a tag. Consumers bump their pin only in a
 release they make anyway.
+
+## Consulting Codex
+
+The shared `codex-consult` skill (user level) has the invocation and the gotchas. For this repo:
+
+For LibTaxiTime, good things to hand Codex:
+- anything that changes the upgrade path: `lib.impl` dispatch, the hooks on `TakeTaxiNode` /
+  `TaxiRequestEarlyLanding` (installed once), the one event frame, the ticker, the completion
+  markers (a newer copy must take over a flight in the air; an older copy loading second must do
+  nothing);
+- anything that could break the additive-API contract (a removed or renamed function, field,
+  store key, event or source name);
+- the landing logic (control back and off the taxi in either order, `SETTLE`), what is learned
+  and what isn't, and the stores (written to all, read newest);
+- packaging: `.pkgmeta`, what a consumer's zip ends up holding under `Libs/LibTaxiTime-1.0/`.
+
+**Always hand it `CLAUDE.md` alongside the diff or plan**, plus
+`C:/Projects/WoW/References/Docs/PORTING-TBC-TO-FOREVER.md` and any `docs/` probe results. Those findings
+were measured on the live client. Without them, a cold reviewer argues from Classic-era or Retail
+behaviour that doesn't hold here: that auras throw for the whole group in combat, that secure
+snippets and state drivers are broken, that some unit numbers are secret.
+`C:/Projects/WoW/References/Forever/api/forever-api-<newest build>.md` is the full API surface when a question
+turns on whether something exists. The precedent embedded library is `C:/Projects/WoW/LibGlass`, and the pilot consumer is
+`C:/Projects/WoW/GlassPanel` (its `Plugins/Flight`); Glass Unit Frames is the second.
