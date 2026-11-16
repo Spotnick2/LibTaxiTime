@@ -39,7 +39,7 @@ meanings are in `LibTaxiTime.lua`'s header. Store keys the library owns: `routes
 field, key, event or source name (`"learned"`, `"route"`, `"estimate"`). GlassPanel's own
 `GlassPanel.Flight` (API 1) passes this shape through to GUF.
 
-## Timing facts (offline; confirm in game, then write them to the porting guide)
+## Timing facts (measured in game 2026-10-22; written to the porting guide)
 
 - **No client duration API.** Time = path length / `SPEED` (30 yd/s). Fitted: InFlight's
   measured Classic times (`..\References\Addons\MapMinimap\InFlightTaxiTimer`, MIT) against
@@ -51,7 +51,14 @@ field, key, event or source name (`"learned"`, `"route"`, `"estimate"`). GlassPa
 - **Lifecycle** (EllesmereUI's on Forever; Codex-reviewed on GlassPanel #125): see the header.
   `UnitOnTaxi` may read false at `PLAYER_CONTROL_LOST`; a landing is control back plus off the
   taxi in either order within `SETTLE` of continuous time off the taxi.
-- Unmeasured: all of the above on Forever itself; node ids from `C_TaxiMap.GetAllTaxiNodes`.
+- **Measured** (the owner's flights, `_classic_beta_` client, 2026-10-22): landed times within
+  +0.4 s of length / 30 (Orgrimmar > Crossroads 110.4 s vs 110.1; back 141.9 vs 141.7; Crossroads >
+  Ratchet 51.9 vs 51.5; Ratchet > Crossroads > Orgrimmar 209.8 vs 209.8, the sum of hops); node ids
+  from `C_TaxiMap.GetAllTaxiNodes(GetTaxiMapID())` (23, 25, 80); Frequent Flier's node reads plainly
+  (rank 0 there); a `/reload` mid-flight saves the flight to every store. Porting guide: "Flight-master
+  flights".
+- **Unmeasured:** Frequent Flier's 20%; `UnitOnTaxi` at `PLAYER_CONTROL_LOST`; which landing signal
+  comes first (either order is handled).
 
 ## On a new client build (new zones bring new flight paths)
 
