@@ -1,15 +1,25 @@
--- Upgrading in place (EMBEDDED-LIBRARIES section 5). The released r1 (frozen
--- in tests/fixtures) loads under the current copy; then a synthetic newer copy
--- (the current source as MINOR 3, with a marker function and Changed counted)
--- loads over the current one.
+-- Upgrading in place (EMBEDDED-LIBRARIES section 5). Every released copy is
+-- frozen in tests/fixtures (RELEASES); r1's specifics come first, then each
+-- release in turn, then a synthetic newer copy (the current source as MINOR 3,
+-- with a marker function and Changed counted) over the current one.
 dofile("tests/harness.lua")
 
--- The released r1, as a host that shipped it loads it.
-local function released(file, src)
-    local name = file:match("([^/\\]+)%.lua$")
-    if name == "LibTaxiTime" or name == "Routes" then return readFile("tests/fixtures/" .. name .. "-r1.lua") end
-    return src
+-- Every release, frozen as tests/fixtures/{LibTaxiTime,Routes}-rN.lua when its
+-- tag is pushed: append N here.
+local RELEASES = { 1, 2 }
+local FILES = { "LibTaxiTime", "Routes" }
+
+-- The released rN, as a host that shipped it loads it.
+local function releasedAs(r)
+    return function(file, src)
+        local name = file:match("([^/\\]+)%.lua$")
+        if name == "LibTaxiTime" or name == "Routes" then
+            return readFile("tests/fixtures/" .. name .. "-r" .. r .. ".lua")
+        end
+        return src
+    end
 end
+local released = releasedAs(1)
 
 -- r1, then the current copy over a flight in the air: the newer routes replace
 -- r1's (a route the client dropped is gone), the flight and the store are kept.
@@ -106,4 +116,34 @@ pcall(loadCopy, "Broken", function(file, src)
 end)
 local ok, err = pcall(lib.AddStore, lib, {})
 check(not ok and tostring(err):find("didn't load completely", 1, true), "an incomplete newer copy fails loudly")
+
+-- Every release. The one with this MINOR must be these files, byte for byte
+-- (two builds sharing a MINOR would let either win): raise MINOR for any
+-- change, routes included. Each older one is upgraded in place by this copy,
+-- and changes nothing loading after it.
+local N = tonumber(readFile("LibTaxiTime.lua"):match('local MAJOR, MINOR = "LibTaxiTime%-1%.0", (%d+)'))
+eq(RELEASES[#RELEASES], N, "the newest release is this MINOR (freeze rN when its tag is pushed)")
+for _, r in ipairs(RELEASES) do
+    for _, name in ipairs(FILES) do
+        local src = readFile("tests/fixtures/" .. name .. "-r" .. r .. ".lua")
+        eq(tonumber(src:match('local MAJOR, MINOR = "LibTaxiTime%-1%.0", (%d+)')), r, name .. "-r" .. r .. " declares MINOR " .. r)
+        if r == N then
+            check(src == readFile(name .. ".lua"), name .. ".lua is r" .. r .. " as released: raise MINOR for any change")
+        end
+    end
+    if r < N then
+        lib = newSession("OldHost", releasedAs(r))
+        eq(select(2, LibStub:GetLibrary("LibTaxiTime-1.0")), r, "r" .. r .. " is active")
+        local yards = lib.YARDS
+        loadCopy("NewHost")
+        eq(select(2, LibStub:GetLibrary("LibTaxiTime-1.0")), N, "r" .. r .. " upgraded to MINOR " .. N)
+        eq(lib.fileMinors.LibTaxiTime, N, "r" .. r .. ": the tracker file is the current one")
+        eq(lib.fileMinors.Routes, N, "r" .. r .. ": the routes file too")
+        check(lib.YARDS == yards, "r" .. r .. ": lib.YARDS is the same table")
+        eq(lib:AddStore({}), true, "r" .. r .. ": the entry point works after the upgrade")
+        lib = newSession("NewHost")
+        loadCopy("OldHost", releasedAs(r))
+        eq(lib.fileMinors.LibTaxiTime, N, "r" .. r .. " loading after this copy installs nothing")
+    end
+end
 done("test_upgrade")
