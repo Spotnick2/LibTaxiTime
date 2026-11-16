@@ -59,7 +59,7 @@
 --   lands early, or its total changes (Forget). Read Current() again then.
 --   lib.errors: the last few errors caught in the client's callbacks.
 
-local MAJOR, MINOR = "LibTaxiTime-1.0", 1
+local MAJOR, MINOR = "LibTaxiTime-1.0", 2
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 

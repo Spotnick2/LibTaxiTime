@@ -2,8 +2,8 @@
 dofile("tests/harness.lua")
 
 local lib = newSession()
-eq(lib.fileMinors.LibTaxiTime, 1, "the tracker file loaded")
-eq(lib.fileMinors.Routes, 1, "the routes file loaded")
+eq(lib.fileMinors.LibTaxiTime, lib.MINOR, "the tracker file loaded")
+eq(lib.fileMinors.Routes, lib.MINOR, "the routes file loaded")
 check(lib.YARDS["23>25"] == 3304, "Routes.lua fills lib.YARDS (Orgrimmar > Crossroads)")
 eq(WoW.frameCount(), 0, "nothing starts before a store is added")
 
