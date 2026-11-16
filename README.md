@@ -21,7 +21,7 @@ Frames' flight bar.
 externals:
   Libs/LibTaxiTime-1.0:
     url: https://github.com/Spotnick2/LibTaxiTime
-    tag: r1
+    tag: r2
 ignore:
   - Libs/LibTaxiTime-1.0/tests
   - Libs/LibTaxiTime-1.0/docs

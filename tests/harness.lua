@@ -1,7 +1,7 @@
 -- harness.lua: assertions, a small Forever client, and the library loader.
 -- Run the tests from the repo root (paths are relative). Plain Lua 5.1.
 --
--- Every stub below is in the Forever 1.60.1.70532 API dump (functions,
+-- Every stub below is in the Forever 1.60.1.70938 API dump (functions,
 -- events, Structure TaxiNodeInfo); EventRegistry and hooksecurefunc are
 -- FrameXML/client globals the addons here already use. Strict globals: a
 -- read of anything not stubbed fails, as a missing API would in game.

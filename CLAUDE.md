@@ -78,8 +78,10 @@ follows). Until a path is baked in, a landing learns it.
   `lib.impl`. Never capture an impl function in a closure that outlives the load.
 - Completion markers: `lib.fileMinors.LibTaxiTime` and `.Routes` on each file's last line;
   `AddStore` errors unless both equal the active MINOR.
-- r1 has no predecessor: `tests/test_upgrade.lua` loads a synthetic MINOR 2 over it. From r2 on,
-  freeze each release as `tests/fixtures/<File>-rN.lua` and load it under the current copy.
+- Each release is frozen as `tests/fixtures/<File>-rN.lua` (r1 so far) and `tests/test_upgrade.lua`
+  loads the current copy over it (routes replaced, a dropped path gone, flight and stores kept), then a
+  synthetic MINOR 3 over the current one. Freeze rN when its tag is cut, and move the synthetic copy
+  above the new MINOR.
 
 ## Toolchain
 
